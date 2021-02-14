@@ -315,8 +315,8 @@ function do_tags($qreq) {
     $users = array();
     if ($qreq->tagfn === "s") {
         // erase existing tags
-        $likes = array();
-        $removes = array();
+        $likes = [];
+        $removes = [];
         foreach ($t1 as $t) {
             list($tag, $index) = Tagger::unpack($t);
             $removes[] = $t;

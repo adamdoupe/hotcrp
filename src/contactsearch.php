@@ -239,7 +239,6 @@ class ContactSearch {
     }
     /** @return list<Contact> */
     function users() {
-        global $Me;
         if ($this->contacts === null) {
             $this->contacts = [];
             $pcm = $this->conf->pc_users();
@@ -248,8 +247,10 @@ class ContactSearch {
                     $this->contacts[] = $p;
                 } else if (($p = $pcm[$cid] ?? null)) {
                     $this->contacts[] = $p;
-                } else if ($Me->contactId == $cid && $Me->conf === $this->conf) {
-                    $this->contacts[] = $Me;
+                } else if (Contact::$guser
+                           && Contact::$guser->contactId === $cid
+                           && Contact::$guser->conf === $this->conf) {
+                    $this->contacts[] = Contact::$guser;
                 } else {
                     $this->contacts[] = $this->conf->user_by_id($cid);
                 }

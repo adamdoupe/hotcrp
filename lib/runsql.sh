@@ -10,26 +10,18 @@ export PROG=$0
 
 usage () {
     if [ -z "$1" ]; then status=1; else status=$1; fi
-    echo "Usage: $PROG [-n CONFNAME | -c CONFIGFILE] [MYSQL-OPTIONS]
-       $PROG --create-user EMAIL [COLUMN=VALUE...]" |
+    echo "Usage: $PROG [-n CONFNAME | -c CONFIGFILE] [MYSQL-OPTIONS]" |
        if [ $status = 0 ]; then cat; else cat 1>&2; fi
     exit $status
 }
 
 export FLAGS=
 mode=
-makeuser=
-makeusercols=
-makeuservals=
-makeuserpassword=true
 cmdlinequery=
 options_file=
 while [ $# -gt 0 ]; do
     shift=1
     case "$1" in
-    --create-user)
-        test "$#" -gt 1 -a -z "$mode" || usage
-        makeuser="$2"; mode=makeuser; shift;;
     --show-opt=*|--show-option=*)
         test -z "$mode" || usage
         optname="`echo "+$1" | sed 's/^[^=]*=//'`"; mode=showopt;;
@@ -53,15 +45,7 @@ while [ $# -gt 0 ]; do
             FLAGS="$FLAGS $1"
         fi;;
     *)
-        if [ "$mode" = makeuser ] && expr "$1" : "[a-zA-Z0-9_]*=" >/dev/null; then
-            colname=`echo "$1" | sed 's/=.*//'`
-            collen=`echo "$colname" | wc -c`
-            collen=`expr $collen + 1`
-            colvalue=`echo "$1" | tail -c +$collen`
-            makeusercols="$makeusercols,$colname"
-            makeuservals="$makeuservals,'`echo "$colvalue" | sql_quote`'"
-            test "$colname" = password && makeuserpassword=false
-        elif [ "$mode" = "" ]; then
+        if [ "$mode" = "" ]; then
             mode=cmdlinequery
             cmdlinequery="$1"
         elif [ "$mode" = cmdlinequery ]; then
@@ -100,12 +84,6 @@ if test "$mode" = showopt; then
         optopt="`echo "select data from Settings where name='opt.$optname'" | eval "$MYSQL $myargs -N $FLAGS $dbname"`"
         if test -n "$optopt"; then eval "echo $optopt"; else eval "echo $opt"; fi
     fi
-elif test "$mode" = makeuser; then
-    if $makeuserpassword; then
-        makeusercols="$makeusercols,password"
-        makeuservals="$makeuservals,''"
-    fi
-    echo "insert into ContactInfo (email$makeusercols) values ('`echo "$makeuser" | sql_quote`'$makeuservals)" | eval "$MYSQL $myargs -N $FLAGS $dbname"
 elif test "$mode" = cmdlinequery; then
     if test -n "$PASSWORDFILE"; then ( sleep 0.3; rm -f $PASSWORDFILE ) & fi
     echo "$cmdlinequery" | eval "$MYSQL $myargs $FLAGS $dbname"

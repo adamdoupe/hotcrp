@@ -2114,7 +2114,7 @@ class Conf {
         $acct = null;
         if (($email = trim((string) $email)) !== "") {
             if ($this->sversion >= 247) {
-                $result = $this->qe("select ContactInfo.* from ContactInfo join ContactEmail using (contactId) where ContactEmail.email=?", $email);
+                $result = $this->qe("select ContactInfo.* from ContactInfo join ContactEmail using (contactId) where ContactEmail.email=?", strtolower($email));
             } else {
                 $result = $this->qe("select * from ContactInfo where email=?", $email);
             }
@@ -2258,10 +2258,8 @@ class Conf {
      * @return false|int
      * @deprecated */
     function user_id_by_email($email) {
-        $result = $this->qe("select contactId from ContactInfo where email=?", trim($email));
-        $row = $result->fetch_row();
-        Dbl::free($result);
-        return $row ? (int) $row[0] : false;
+        $u = $this->fresh_user_by_email($email);
+        return $u ? $u->contactId : false;
     }
 
     /** @param string $email */

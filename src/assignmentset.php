@@ -520,32 +520,34 @@ class AssignerContacts {
     private $none_user;
     /** @var int */
     static private $next_fake_id = -10;
-    static public $query = "ContactInfo.contactId, firstName, lastName, unaccentedName, email, affiliation, collaborators, roles, contactTags, primaryContactId";
+    static public $query = "ContactInfo.contactId, firstName, lastName, unaccentedName, ContactInfo.email, affiliation, collaborators, roles, contactTags, primaryContactId";
     static public $cdb_query = "contactDbId, firstName, lastName, email, affiliation, collaborators, 0 roles, '' contactTags, 0 primaryContactId";
     function __construct(Conf $conf, Contact $viewer) {
-        global $Me;
         $this->conf = $conf;
         $this->viewer = $viewer;
-        if ($Me && $Me->contactId > 0 && $Me->conf === $conf) {
-            $this->store($Me);
+        if (Contact::$guser
+            && Contact::$guser->contactId > 0
+            && Contact::$guser->conf === $conf) {
+            $this->store(Contact::$guser, strlower(Contact::$guser->email));
         }
     }
-    private function store(Contact $c) {
+    private function store(Contact $c, $lemail) {
         if ($c->contactId != 0) {
             if (isset($this->by_id[$c->contactId])) {
-                return $this->by_id[$c->contactId];
+                $c = $this->by_id[$c->contactId];
+            } else {
+                $this->by_id[$c->contactId] = $c;
             }
-            $this->by_id[$c->contactId] = $c;
         }
-        if ($c->email) {
-            $this->by_lemail[strtolower($c->email)] = $c;
+        if ($lemail && !isset($this->by_lemail[$lemail])) {
+            $this->by_lemail[$lemail] = $c;
         }
         return $c;
     }
     private function ensure_pc() {
         if (!$this->has_pc) {
             foreach ($this->conf->pc_members() as $p) {
-                $this->store($p);
+                $this->store($p, strtolower($p->email));
             }
             $this->has_pc = true;
         }
@@ -576,7 +578,7 @@ class AssignerContacts {
             $c = new Contact(["contactId" => $cid, "roles" => 0, "email" => "unknown contact $cid"], $this->conf);
         }
         Dbl::free($result);
-        return $this->store($c);
+        return $this->store($c, strtolower($c->email));
     }
     /** @param string $email
      * @param ?CsvRow $req
@@ -593,7 +595,7 @@ class AssignerContacts {
         if (($c = $this->by_lemail[$lemail] ?? null)) {
             return $c;
         }
-        $result = $this->conf->qe("select " . self::$query . " from ContactInfo where email=?", $lemail);
+        $result = $this->conf->qe("select " . self::$query . " from ContactEmail join ContactInfo using (contactId) where ContactEmail.email=?", $lemail);
         $c = Contact::fetch($result, $this->conf);
         Dbl::free($result);
         if (!$c && $create) {
@@ -620,7 +622,7 @@ class AssignerContacts {
             }
             $c->contactXid = $c->contactId = self::$next_fake_id--;
         }
-        return $c ? $this->store($c) : null;
+        return $c ? $this->store($c, $lemail) : null;
     }
     /** @return array<int,Contact> */
     function pc_users() {
@@ -632,7 +634,8 @@ class AssignerContacts {
         $rset = $this->pc_users();
         $result = $this->conf->qe("select " . AssignerContacts::$query . " from ContactInfo join PaperReview using (contactId) where (roles&" . Contact::ROLE_PC . ")=0 and paperId?a group by ContactInfo.contactId", $pids);
         while ($result && ($c = Contact::fetch($result, $this->conf))) {
-            $rset[$c->contactId] = $this->store($c);
+            // XXX what if this user is not the current user for this email
+            $rset[$c->contactId] = $this->store($c, strtolower($c->email));
         }
         Dbl::free($result);
         return $rset;
@@ -643,7 +646,8 @@ class AssignerContacts {
             return $c;
         }
         assert($this->by_id[$c->contactId] === $c);
-        $cx = $this->by_lemail[strtolower($c->email)];
+        $lemail = strtolower($c->email);
+        $cx = $this->by_lemail[$lemail];
         if ($cx === $c) {
             // XXX assume that never fails:
             $cargs = [];
@@ -652,7 +656,7 @@ class AssignerContacts {
                     $cargs[$k] = $c->$k;
             }
             $cx = Contact::create($this->conf, $this->viewer, $cargs, $cx->is_anonymous_user() ? Contact::SAVE_ANY_EMAIL : 0);
-            $cx = $this->store($cx);
+            $cx = $this->store($cx, $lemail);
         }
         return $cx;
     }

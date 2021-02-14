@@ -510,11 +510,10 @@ if (isset($Qreq->delete) && !Dbl::has_error() && $Qreq->valid_post()) {
             Conf::msg_error("This account is locked and can’t be deleted.");
         } else {
             $Conf->q("insert into DeletedContactInfo set contactId=?, firstName=?, lastName=?, unaccentedName=?, email=?, affiliation=?", $Acct->contactId, $Acct->firstName, $Acct->lastName, $Acct->unaccentedName, $Acct->email, $Acct->affiliation);
-            foreach (array("ContactInfo",
-                           "PaperComment", "PaperConflict", "PaperReview",
-                           "PaperReviewPreference", "PaperReviewRefused",
-                           "PaperWatch", "ReviewRating", "TopicInterest")
-                     as $table) {
+            foreach (["ContactInfo",
+                      "PaperComment", "PaperConflict", "PaperReview",
+                      "PaperReviewPreference", "PaperReviewRefused",
+                      "PaperWatch", "ReviewRating", "TopicInterest"] as $table) {
                 $Conf->qe_raw("delete from $table where contactId=$Acct->contactId");
             }
             // delete twiddle tags

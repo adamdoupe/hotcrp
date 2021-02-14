@@ -1484,6 +1484,7 @@ class Contact {
     const SAVE_IMPORT = 2;
     const SAVE_ROLES = 4;
 
+    /** @param string $email */
     function change_email($email) {
         assert($this->has_account_here());
         $old_email = $this->email;
@@ -1657,16 +1658,13 @@ class Contact {
     function save_prop() {
         if (empty($this->_mod_undo)) {
             return true;
-        } else if ($this->cdb_confid !== 0) {
-            $db = $this->conf->contactdb();
-            $idk = "contactDbId";
-            $flag = self::PROP_CDB;
-        } else {
-            $db = $this->conf->dblink;
-            $idk = "contactId";
-            $flag = self::PROP_LOCAL;
         }
-        if (!$this->$idk) {
+        $iscdb = $this->cdb_confid !== 0;
+        $db = $iscdb ? $this->conf->contactdb() : $this->conf->dblink;
+        $id = $iscdb ? $this->contactDbId : $this->contactId;
+        $lemail = strtolower($this->email);
+        if (!$id) {
+            assert($lemail !== "");
             if (!array_key_exists("password", $this->_mod_undo)) {
                 $this->password = validate_email($this->email) ? " unset" : " nologin";
                 $this->passwordTime = Conf::$now;
@@ -1675,8 +1673,8 @@ class Contact {
         $qf = $qv = [];
         foreach (self::$props as $prop => $shape) {
             if (array_key_exists($prop, $this->_mod_undo)
-                || (!$this->$idk
-                    && ($shape & $flag) !== 0
+                || (!$id
+                    && ($shape & ($iscdb ? self::PROP_CDB : self::PROP_LOCAL)) !== 0
                     && ($shape & self::PROP_NULL) === 0)) {
                 $qf[] = "{$prop}=?";
                 $value = $this->prop1($prop, $shape);
@@ -1695,33 +1693,42 @@ class Contact {
         }
         if ((array_key_exists("firstName", $this->_mod_undo)
              || array_key_exists("lastName", $this->_mod_undo))
-            && $this->cdb_confid === 0) {
+            && !$iscdb) {
             $qf[] = "unaccentedName=?";
             $qv[] = Text::name($this->firstName, $this->lastName, "", NAME_U);
         }
-        if ($this->$idk) {
-            $qv[] = $this->$idk;
-            $result = Dbl::qe_apply($db, "update ContactInfo set " . join(", ", $qf) . " where {$idk}=?", $qv);
-        } else {
-            assert($this->email !== "");
+        $ok = true;
+        if (!$id && !$iscdb && $this->conf->sversion >= 247) {
+            $result = Dbl::qe($db, "insert into ContactEmail set email=?, contactId=0, emailType=1 on duplicate key update emailType=emailType", $lemail);
+            $ok = $result->affected_rows > 0;
+            Dbl::free($result);
+        }
+        if ($ok && $id) {
+            $qv[] = $id;
+            $result = Dbl::qe_apply($db, "update ContactInfo set " . join(", ", $qf) . " where " . ($iscdb ? "contactDbId" : "contactId") . "=?", $qv);
+            $ok = !Dbl::is_error($result);
+            Dbl::free($result);
+        } else if ($ok) {
             $result = Dbl::qe_apply($db, "insert into ContactInfo set " . join(", ", $qf) . " on duplicate key update firstName=firstName", $qv);
-            if ($result->affected_rows) {
-                $this->$idk = (int) $result->insert_id;
-                if ($this->cdb_confid === 0) {
-                    $this->contactXid = (int) $result->insert_id;
-                }
+            $ok = $result->affected_rows > 0;
+            $newid = (int) $result->insert_id;
+            Dbl::free($result);
+            if ($ok && !$iscdb) {
+                $this->contactId = $this->contactXid = $newid;
+                $result = Dbl::qe($db, "update ContactEmail set contactId=? where email=?", $newid, $lemail);
+                Dbl::free($result);
+            } else if ($ok) {
+                $this->contactDbId = $newid;
             }
         }
-        $ok = !Dbl::is_error($result);
-        Dbl::free($result);
         if ($ok) {
             // invalidate caches
             $this->_disabled = null;
             $this->_mod_undo = null;
+            $this->conf->invalidate_user($this);
         } else {
             error_log("{$this->conf->dbname}: save {$this->email} fails " . debug_string_backtrace());
         }
-        $this->conf->invalidate_user($this);
         return $ok;
     }
 
