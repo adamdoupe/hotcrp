@@ -324,7 +324,7 @@ $u = $Conf->contactdb_user_by_email("betty4@_.com");
 xassert_eqq($u->firstName, "Betty");
 xassert_eqq($u->lastName, "Kelly");
 xassert_eqq($u->affiliation, "France");
-$u = $Conf->user_by_email("betty5@_.com");
+$u = $Conf->fresh_user_by_email("betty5@_.com");
 xassert(!$u);
 $u = $Conf->contactdb_user_by_email("betty5@_.com");
 $u->activate_database_account();

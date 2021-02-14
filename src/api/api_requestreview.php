@@ -24,7 +24,7 @@ class RequestReview_API {
             return self::requestreview_anonymous($user, $qreq, $prow);
         }
 
-        $reviewer = $user->conf->user_by_email($email);
+        $reviewer = $user->conf->fresh_user_by_email($email);
         if (!$reviewer && ($email === "" || !validate_email($email))) {
             return self::error_result(400, "email", "Invalid email address.");
         }
@@ -82,7 +82,7 @@ class RequestReview_API {
 
         // check requester
         if ($request && $user->can_administer($prow)) {
-            $requester = $user->conf->cached_user_by_id($request->requestedBy) ?? $user;
+            $requester = $user->conf->user_by_id($request->requestedBy) ?? $user;
         } else {
             $requester = $user;
         }
@@ -186,7 +186,7 @@ class RequestReview_API {
         // member, who can see less.
         if (($request = $user->conf->fetch_first_object("select * from ReviewRequest where paperId=? and email=?", $prow->paperId, trim($qreq->email)))) {
             $requester = $user->conf->user_by_id($request->requestedBy);
-            $reviewer = $user->conf->user_by_email($email);
+            $reviewer = $user->conf->full_user_by_email($email);
             $reason = trim((string) $qreq->reason);
 
             $user->conf->qe("delete from ReviewRequest where paperId=? and email=?",
@@ -246,7 +246,7 @@ class RequestReview_API {
         $prow->ensure_full_reviews();
         $prow->ensure_reviewer_names();
 
-        $u = $user->conf->cached_user_by_email($email);
+        $u = $user->conf->full_user_by_email($email);
         if (!$user->can_administer($prow)
             && (!$user->email || strcasecmp($email, $user->email) !== 0)
             && (!$u || $user->capability("@ra{$prow->paperId}") != $u->contactId)) {
@@ -319,7 +319,7 @@ class RequestReview_API {
                     "prow" => $prow, "reviewer_contact" => $rrow, "reason" => $reason
                 ]);
             }
-            $user->log_activity_for($rrow->contactId, "Review $rrow->reviewId declined", $prow);
+            $user->log_activity_for($rrow->contactId, "Review {$rrow->reviewId} declined", $prow);
         }
 
         if ($qreq->redirect) {
@@ -338,7 +338,7 @@ class RequestReview_API {
             return self::error_result(400, "email", "Bad request.");
         }
 
-        if (($u = $user->conf->cached_user_by_email($email))) {
+        if (($u = $user->conf->full_user_by_email($email))) {
             $xrrows = $prow->reviews_of_user($u);
         }
         $result = $user->conf->qe("select * from ReviewRequest where paperId=? and email=?",
@@ -390,9 +390,9 @@ class RequestReview_API {
         $notified = false;
         if ($user->conf->time_review_open()) {
             foreach ($rrows as $rrow) {
-                if (($reviewer = $user->conf->cached_user_by_id($rrow->contactId))) {
+                if (($reviewer = $user->conf->user_by_id($rrow->contactId))) {
                     $cc = Text::nameo($user, NAME_MAILQUOTE|NAME_E);
-                    if (($requester = $user->conf->cached_user_by_id($rrow->requestedBy))
+                    if (($requester = $user->conf->user_by_id($rrow->requestedBy))
                         && $requester->contactId != $user->contactId) {
                         $cc .= ", " . Text::nameo($requester, NAME_MAILQUOTE|NAME_E);
                     }

@@ -459,8 +459,8 @@ class Signin_Partial {
                 Ht::error_at("password", "The passwords you entered did not match.");
                 Ht::error_at("password2");
             } else {
-                $accthere = $conf->user_by_email($this->_reset_user->email)
-                    ? : Contact::create($conf, null, $this->_reset_user);
+                $accthere = $conf->fresh_user_by_email($this->_reset_user->email)
+                    ?? Contact::create($conf, null, $this->_reset_user);
                 $accthere->change_password($p1);
                 $accthere->log_activity("Password reset via " . substr($this->_reset_cap, 0, 8) . "...");
                 $conf->msg("Password changed. Use the new password to sign in below.", "xconfirm");

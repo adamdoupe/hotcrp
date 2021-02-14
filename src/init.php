@@ -172,7 +172,7 @@ if (!($Opt["loaded"] ?? null) || ($Opt["missing"] ?? null)) {
     Multiconference::fail_bad_options();
 }
 if (isset($Opt["dbLogQueries"]) && $Opt["dbLogQueries"]) {
-    Dbl::log_queries($Opt["dbLogQueries"], $Opt["dbLogQueryFile"] ?? null);
+    Dbl::log_queries($Opt["dbLogQueries"], $Opt["dbLogQueriesFile"] ?? null);
 }
 
 

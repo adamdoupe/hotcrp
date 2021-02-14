@@ -23,7 +23,7 @@ class PaperPC_API {
             $k = "{$type}ContactId";
             $cid = $prow->$k;
         }
-        $pcu = $cid ? $user->conf->cached_user_by_id($cid) : null;
+        $pcu = $cid ? $user->conf->user_by_id($cid) : null;
         $j = [
             "ok" => true,
             "value" => $pcu ? $user->email : "none",

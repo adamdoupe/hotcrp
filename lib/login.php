@@ -66,8 +66,8 @@ class LoginHelper {
                 $qreq[$k] = rawurldecode($qreq[$k]);
             }
         }
-        return $conf->user_by_email($qreq->email)
-            ? : new Contact(["email" => $qreq->email], $conf);
+        return $conf->fresh_user_by_email($qreq->email)
+            ?? new Contact(["email" => $qreq->email], $conf);
     }
 
     static function login_info(Conf $conf, Qrequest $qreq) {

@@ -117,9 +117,9 @@ class PCConflicts_PaperOption extends PaperOption {
         foreach ($ja as $email => $v) {
             if (is_string($email)
                 && (is_bool($v) || is_int($v) || is_string($v))) {
-                $pc = $prow->conf->cached_user_by_email($email);
+                $pc = $prow->conf->user_by_email($email);
                 if ($pc && $pc->primaryContactId) {
-                    $pc = $prow->conf->cached_user_by_id($pc->primaryContactId);
+                    $pc = $prow->conf->user_by_id($pc->primaryContactId);
                 }
                 if (!$pc || !$pc->isPC) {
                     $pv->msg("“" . htmlspecialchars($email) . "” is not a PC member’s email.", MessageSet::WARNING);

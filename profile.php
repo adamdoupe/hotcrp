@@ -23,7 +23,7 @@ function change_email_by_capability($Qreq) {
     }
 
     $Acct = null;
-    if ($capdata && !($Acct = $Conf->user_by_id($capdata->contactId))) {
+    if ($capdata && !($Acct = $Conf->fresh_user_by_id($capdata->contactId))) {
         Ht::error_at("changeemail", "The account associated with that email change code no longer exists.");
     }
     if ($Acct && strcasecmp($Acct->email, $capcontent->oldemail) !== 0) {
@@ -32,7 +32,7 @@ function change_email_by_capability($Qreq) {
     }
 
     $newemail = $Acct ? $capcontent->uemail : null;
-    if ($Acct && $Conf->user_by_email($newemail)) {
+    if ($Acct && $Conf->fresh_user_by_email($newemail)) {
         Conf::msg_error("The email address you requested, " . htmlspecialchars($newemail) . ", is already in use on this site. You may want to <a href=\"" . $Conf->hoturl("mergeaccounts") . "\">merge these accounts</a>.");
         return false;
     }
@@ -155,15 +155,15 @@ if ($Qreq->u === "me" || $Qreq->u === "self") {
         $Acct = new Contact(null, $Conf);
         $newProfile = 2;
     } else if (($id = cvtint($Qreq->u)) > 0) {
-        $Acct = $Conf->user_by_id($id);
+        $Acct = $Conf->fresh_user_by_id($id);
     } else if ($Qreq->u === "" && $Qreq->search) {
         Navigation::redirect_site("users");
     } else {
-        $Acct = $Conf->user_by_email($Qreq->u);
+        $Acct = $Conf->fresh_user_by_email($Qreq->u);
         if (!$Acct && $Qreq->search) {
             $cs = new ContactSearch(ContactSearch::F_USER, $Qreq->u, $Me);
             if ($cs->user_ids()) {
-                $Acct = $Conf->user_by_id(($cs->user_ids())[0]);
+                $Acct = $Conf->fresh_user_by_id(($cs->user_ids())[0]);
                 $list = new SessionList("u/all/" . urlencode($Qreq->search), $cs->user_ids(), "“" . htmlspecialchars($Qreq->u) . "”", $Conf->hoturl_site_relative_raw("users", ["t" => "all"]));
                 $list->set_cookie($Me);
                 $Qreq->u = $Acct->email;
@@ -243,7 +243,7 @@ function save_user($cj, $ustatus, $acct) {
         if ($acct && $acct->data("locked")) {
             $ustatus->error_at("email", "This account is locked, so you can’t change its email address.");
             return null;
-        } else if (($new_acct = $ustatus->conf->user_by_email($cj->email))) {
+        } else if (($new_acct = $ustatus->conf->fresh_user_by_email($cj->email))) {
             if (!$acct) {
                 $cj->id = $new_acct->contactId;
             } else {

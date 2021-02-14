@@ -272,7 +272,7 @@ if ((isset($Qreq->refuse) || isset($Qreq->decline))
     if ($paperTable->editrrow) {
         $Qreq->email = $decline_email = $paperTable->editrrow->email;
     } else if (($ra_cid = $Me->capability("@ra" . $prow->paperId))
-               && ($ra_user = $Conf->cached_user_by_id($ra_cid))) {
+               && ($ra_user = $Conf->user_by_id($ra_cid))) {
         $Qreq->email = $decline_email = $ra_user->email;
     }
     $result = RequestReview_API::declinereview($Me, $Qreq, $prow);

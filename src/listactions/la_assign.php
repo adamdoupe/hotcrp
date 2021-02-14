@@ -38,7 +38,7 @@ class Assign_ListAction extends ListAction {
         $mpc = (string) $qreq->markpc;
         if ($mpc === "" || $mpc === "0" || strcasecmp($mpc, "none") == 0) {
             $mpc = "none";
-        } else if (($pc = $user->conf->cached_user_by_email($mpc))) {
+        } else if (($pc = $user->conf->pc_member_by_email($mpc))) {
             $mpc = $pc->email;
         } else {
             return "“" . htmlspecialchars($mpc) . "” is not a PC member.";

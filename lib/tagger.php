@@ -889,7 +889,7 @@ class TagMap implements IteratorAggregate {
             $cid = (int) substr($tag, 0, $twiddle);
             if ($cid !== 0 && $cid === $viewer->contactId) {
                 $tag = substr($tag, $twiddle);
-            } else if (($p = $viewer->conf->cached_user_by_id($cid))) {
+            } else if (($p = $viewer->conf->user_by_id($cid))) {
                 if ($flags & self::UNPARSE_TEXT) {
                     return $hash . $p->email . substr($tag, $twiddle) . $suffix;
                 }

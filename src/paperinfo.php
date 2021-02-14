@@ -1045,7 +1045,7 @@ class PaperInfo {
     /** @return list<Contact> */
     function administrators() {
         if ($this->managerContactId > 0) {
-            $u = $this->conf->cached_user_by_id($this->managerContactId);
+            $u = $this->conf->user_by_id($this->managerContactId);
             return $u ? [$u] : [];
         }
 
@@ -2185,7 +2185,7 @@ class PaperInfo {
     private function ensure_full_review_name() {
         $names = [];
         foreach ($this->_full_review ?? [] as $rrow) {
-            if (($u = $this->conf->cached_user_by_id($rrow->contactId))) {
+            if (($u = $this->conf->user_by_id($rrow->contactId))) {
                 $rrow->assign_name($u, $names);
             }
         }
@@ -2335,14 +2335,14 @@ class PaperInfo {
     private function ensure_reviewer_names_set($row_set) {
         foreach ($row_set as $prow) {
             foreach ($prow->reviews_by_id() as $rrow) {
-                $this->conf->request_cached_user_by_id($rrow->contactId);
+                $this->conf->preload_user_by_id($rrow->contactId);
             }
         }
         foreach ($row_set as $prow) {
             $prow->_reviews_have["names"] = true;
             $names = [];
             foreach ($prow->reviews_by_id() as $rrow) {
-                if (($u = $this->conf->cached_user_by_id($rrow->contactId))) {
+                if (($u = $this->conf->user_by_id($rrow->contactId))) {
                     $rrow->assign_name($u, $names);
                 }
             }

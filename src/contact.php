@@ -625,7 +625,7 @@ class Contact {
 
         // translate to email
         if (is_numeric($x)) {
-            $acct = $this->conf->user_by_id($x);
+            $acct = $this->conf->fresh_user_by_id($x);
             $email = $acct ? $acct->email : null;
         } else if ($x === "admin") {
             $email = $this->email;
@@ -639,7 +639,7 @@ class Contact {
         }
 
         // new account must exist
-        $u = $this->conf->user_by_email($email);
+        $u = $this->conf->fresh_user_by_email($email);
         if (!$u
             && validate_email($email)
             && $this->conf->opt("debugShowSensitiveEmail")) {
@@ -1040,7 +1040,7 @@ class Contact {
 
         if (!is_object($x) || !isset($x->firstName)) {
             if ($pfx === "u") {
-                $x = $this->conf->cached_user_by_id($cid);
+                $x = $this->conf->user_by_id($cid);
             } else {
                 $x = $this->name_for("u", $cid);
             }
@@ -1099,14 +1099,14 @@ class Contact {
             if (isset($pcm[$a]) && isset($pcm[$b])) {
                 return $pcm[$a]->sort_position - $pcm[$b]->sort_position;
             }
-            $au = $pcm[$a] ?? $this->conf->cached_user_by_id($a);
-            $bu = $pcm[$b] ?? $this->conf->cached_user_by_id($b);
+            $au = $pcm[$a] ?? $this->conf->user_by_id($a);
+            $bu = $pcm[$b] ?? $this->conf->user_by_id($b);
             if ($au && $bu) {
                 return call_user_func($this->conf->user_comparator(), $au, $bu);
             } else if ($au || $bu) {
                 return $au ? -1 : 1;
             } else {
-                return $a - $b;
+                return $a <=> $b;
             }
         });
     }
@@ -1406,7 +1406,7 @@ class Contact {
     function reviewer_capability_user($pid) {
         if ($this->_capabilities !== null
             && ($rcid = $this->_capabilities["@ra{$pid}"] ?? null)) {
-            return $this->conf->cached_user_by_id($rcid);
+            return $this->conf->user_by_id($rcid);
         } else {
             return null;
         }
@@ -1721,6 +1721,7 @@ class Contact {
         } else {
             error_log("{$this->conf->dbname}: save {$this->email} fails " . debug_string_backtrace());
         }
+        $this->conf->invalidate_user($this);
         return $ok;
     }
 
@@ -1802,7 +1803,8 @@ class Contact {
 
         // look up existing accounts
         $valid_email = validate_email($reg->email);
-        $u = $conf->user_by_email($reg->email) ?? new Contact(["email" => $reg->email], $conf);
+        $u = $conf->fresh_user_by_email($reg->email)
+            ?? new Contact(["email" => $reg->email], $conf);
         if (($cdb = $conf->contactdb()) && $valid_email) {
             $cdbu = $conf->contactdb_user_by_email($reg->email);
         } else {
@@ -1846,7 +1848,7 @@ class Contact {
         }
         if (!$u->save_prop()) {
             // maybe failed because concurrent create (unlikely)
-            $u = $conf->user_by_email($reg->email);
+            $u = $conf->fresh_user_by_email($reg->email);
         }
 
         // update roles

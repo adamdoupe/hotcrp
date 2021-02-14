@@ -120,7 +120,7 @@ function initialize_web() {
     }
 
     // look up and activate user
-    $guser = $trueemail ? $conf->user_by_email($trueemail) : null;
+    $guser = $trueemail ? $conf->fresh_user_by_email($trueemail) : null;
     if (!$guser) {
         $guser = new Contact($trueemail ? (object) ["email" => $trueemail] : null);
     }

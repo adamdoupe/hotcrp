@@ -415,7 +415,7 @@ class UserStatus extends MessageSet {
             && $old_user
             && ($cj->email ?? false)
             && strtolower($old_user->email) !== strtolower($cj->email)
-            && $this->conf->user_by_email($cj->email)) {
+            && $this->conf->fresh_user_by_email($cj->email)) {
             $this->error_at("email", "Email address “" . htmlspecialchars($cj->email) . "” is already in use. You may want to <a href=\"" . $this->conf->hoturl("mergeaccounts") . "\">merge these accounts</a>.");
         }
 
@@ -786,7 +786,7 @@ class UserStatus extends MessageSet {
         // obtain old users in this conference and contactdb
         // - load by id if only id is set
         if (!$old_user && isset($cj->id) && is_int($cj->id)) {
-            $old_user = $this->conf->user_by_id($cj->id);
+            $old_user = $this->conf->fresh_user_by_id($cj->id);
         }
 
         // - obtain email
@@ -810,7 +810,7 @@ class UserStatus extends MessageSet {
         // - load old_user; reset if old_user was in contactdb
         if (!$old_user || !$old_user->has_account_here()) {
             if ($old_email) {
-                $old_user = $this->conf->user_by_email($old_email);
+                $old_user = $this->conf->fresh_user_by_email($old_email);
             } else {
                 $old_user = null;
             }

@@ -215,6 +215,9 @@ $paperTable = new PaperTable($prow, $Qreq, "assign");
 $paperTable->initialize(false, false);
 $paperTable->resolveReview(false);
 $allow_view_authors = $Me->allow_view_authors($prow);
+if ($Me->allow_administer($prow)) {
+    $Conf->full_pc_members(); // don't load PC members twice
+}
 
 assign_show_header();
 
@@ -262,6 +265,12 @@ if (!empty($requests)) {
         '<div class="revcard-body"><div class="ctable-wide">';
 }
 foreach ($requests as $req) {
+    $rrow = $req[3];
+    if (($rrow->contactId ?? 0) > 0) {
+        $Conf->preload_user_by_id($rrow->contactId);
+    }
+}
+foreach ($requests as $req) {
     echo '<div class="ctelt"><div class="ctelti has-fold';
     $rrow = $req[3];
     if ($req[0] === 1
@@ -274,9 +283,9 @@ foreach ($requests as $req) {
 
     $rrowid = null;
     if (isset($rrow->contactId) && $rrow->contactId > 0) {
-        $rrowid = $Conf->cached_user_by_id($rrow->contactId);
+        $rrowid = $Conf->full_user_by_id($rrow->contactId);
     } else if ($req[0] === 1) {
-        $rrowid = $Conf->cached_user_by_email($rrow->email);
+        $rrowid = $Conf->full_user_by_email($rrow->email);
     }
     if ($rrowid === null) {
         if ($req[0] === 1) {

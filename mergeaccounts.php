@@ -58,7 +58,7 @@ if (isset($Qreq->merge) && $Qreq->valid_post()) {
         $MergeError = "Enter the password of the account to merge.";
         Ht::error_at("password");
     } else {
-        $MiniMe = $Conf->user_by_email($Qreq->email);
+        $MiniMe = $Conf->fresh_user_by_email($Qreq->email);
         if (!$MiniMe) {
             $MiniMe = $Conf->contactdb_user_by_email($Qreq->email);
         }

@@ -1078,7 +1078,7 @@ $blind\n";
             $buttons[] = Ht::submit("accept", "Accept", ["class" => "btn-success"]);
             // Also see $qreq->refuse case in review.php.
             if ($rrow->requestedBy
-                && ($requester = $this->conf->cached_user_by_id($rrow->requestedBy))) {
+                && ($requester = $this->conf->user_by_id($rrow->requestedBy))) {
                 $req = 'Please take a moment to accept or decline ' . Text::nameo_h($requester, NAME_P) . '’s review request.';
             } else {
                 $req = 'Please take a moment to accept or decline our review request.';
@@ -1927,7 +1927,7 @@ class ReviewValues extends MessageSet {
         $reviewer = $user;
         if ($rrow) {
             if ($rrow->contactId != $user->contactId) {
-                $reviewer = $this->conf->cached_user_by_id($rrow->contactId);
+                $reviewer = $this->conf->user_by_id($rrow->contactId);
             }
         } else if (isset($this->req["reviewerEmail"])
                    && strcasecmp($this->req["reviewerEmail"], $user->email) != 0) {
@@ -2499,7 +2499,7 @@ class ReviewValues extends MessageSet {
         // potentially email chair, reviewers, and authors
         $reviewer = $user;
         if ($contactId != $user->contactId) {
-            $reviewer = $this->conf->cached_user_by_id($contactId);
+            $reviewer = $this->conf->user_by_id($contactId);
         }
         $this->do_notify($prow, $new_rrow, $newstatus, $oldstatus, $diffinfo, $reviewer, $user);
 

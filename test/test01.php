@@ -771,10 +771,10 @@ assert_search_papers($user_chair, "re:opt:mgbaker", "1 2 13 17");
 xassert_assign($user_chair, "action,paper,email,reviewtype\nreview,any,mgbaker,any:external");
 assert_search_papers($user_chair, "re:opt:mgbaker", "1 2 13 17");
 
-xassert(!$Conf->user_by_email("newexternal@_.com"));
+xassert(!$Conf->fresh_user_by_email("newexternal@_.com"));
 assert_search_papers($user_chair, "re:newexternal@_.com", "");
 xassert_assign($user_chair, "action,paper,email\nreview,3,newexternal@_.com");
-xassert($Conf->user_by_email("newexternal@_.com"));
+xassert($Conf->fresh_user_by_email("newexternal@_.com"));
 assert_search_papers($user_chair, "re:newexternal@_.com", "3");
 
 assert_search_papers($user_chair, "re:external@_.com", "2");

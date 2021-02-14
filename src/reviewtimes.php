@@ -122,7 +122,7 @@ class ReviewTimes {
 
         foreach ($this->r as $cid => $x) {
             if (is_int($cid) || ctype_digit($cid))
-                $this->conf->request_cached_user_by_id((int) $cid);
+                $this->conf->preload_user_by_id((int) $cid);
         }
 
         $users = array();
@@ -130,7 +130,7 @@ class ReviewTimes {
         foreach ($this->r as $cid => $x) {
             if ($cid !== "conflicts") {
                 $users[$cid] = $u = (object) array();
-                $p = $this->conf->cached_user_by_id((int) $cid);
+                $p = $this->conf->user_by_id((int) $cid);
                 if ($p) {
                     $u->name = $p->name(NAME_P);
                 }

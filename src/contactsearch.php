@@ -251,7 +251,7 @@ class ContactSearch {
                 } else if ($Me->contactId == $cid && $Me->conf === $this->conf) {
                     $this->contacts[] = $Me;
                 } else {
-                    $this->contacts[] = $this->conf->cached_user_by_id($cid);
+                    $this->contacts[] = $this->conf->user_by_id($cid);
                 }
             }
         }
