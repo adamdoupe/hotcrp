@@ -1993,6 +1993,16 @@ set ordinal=(t.maxOrdinal+1) where commentId=$row[1]");
         Dbl::qx($conf->dblink, "delete from Settings where name='opt.allow_auseerev_unlessincomplete'");
         $conf->update_schema_version(246);
     }
+    if ($conf->sversion === 246
+        && $conf->ql_ok("CREATE TABLE `ContactEmail` (
+  `email` varbinary(200) NOT NULL,
+  `contactId` int(11) NOT NULL,
+  `emailType` int(11) NOT NULL,
+  PRIMARY KEY (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8")
+        && $conf->ql_ok("insert into ContactEmail (email,contactId,emailType) select lower(email), contactId, 1 emailType from ContactInfo")) {
+        $conf->update_schema_version(247);
+    }
 
     $conf->ql_ok("delete from Settings where name='__schema_lock'");
     Conf::$main = $old_conf_g;

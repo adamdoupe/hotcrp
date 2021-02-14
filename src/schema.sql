@@ -71,6 +71,20 @@ CREATE TABLE `ContactInfo` (
 
 
 --
+-- Table structure for table `ContactEmail`
+--
+
+DROP TABLE IF EXISTS `ContactEmail`;
+CREATE TABLE `ContactEmail` (
+  `email` varbinary(200) NOT NULL,
+  `contactId` int(11) NOT NULL,
+  `emailType` int(11) NOT NULL,
+  PRIMARY KEY (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+--
 -- Table structure for table `DeletedContactInfo`
 --
 
@@ -516,7 +530,7 @@ CREATE TABLE `TopicInterest` (
 
 
 
-insert into Settings (name, value) values ('allowPaperOption', 246);
+insert into Settings (name, value) values ('allowPaperOption', 247);
 insert into Settings (name, value) values ('setupPhase', 1);
 -- there are no submissions yet
 insert into Settings (name, value) values ('no_papersub', 1);

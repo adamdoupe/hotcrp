@@ -366,7 +366,7 @@ class Conf {
 
         // update schema
         $this->sversion = $this->settings["allowPaperOption"];
-        if ($this->sversion < 246) {
+        if ($this->sversion < 247) {
             require_once("updateschema.php");
             $old_nerrors = Dbl::$nerrors;
             updateSchema($this);
@@ -2113,7 +2113,11 @@ class Conf {
     function fresh_user_by_email($email) {
         $acct = null;
         if (($email = trim((string) $email)) !== "") {
-            $result = $this->qe("select * from ContactInfo where email=?", $email);
+            if ($this->sversion >= 247) {
+                $result = $this->qe("select ContactInfo.* from ContactInfo join ContactEmail using (contactId) where ContactEmail.email=?", $email);
+            } else {
+                $result = $this->qe("select * from ContactInfo where email=?", $email);
+            }
             $acct = Contact::fetch($result, $this);
             Dbl::free($result);
         }
