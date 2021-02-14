@@ -528,7 +528,7 @@ class AssignerContacts {
         if (Contact::$guser
             && Contact::$guser->contactId > 0
             && Contact::$guser->conf === $conf) {
-            $this->store(Contact::$guser, strlower(Contact::$guser->email));
+            $this->store(Contact::$guser, strtolower(Contact::$guser->email));
         }
     }
     private function store(Contact $c, $lemail) {
